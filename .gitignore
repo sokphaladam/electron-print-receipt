@@ -1,0 +1,65 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Dependency directories
+node_modules/
+bower_components/
+
+# Build output
+/dist/
+/build/
+/out/
+
+# Electron packaging
+*.asar
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*.local
+
+# OS-specific
+.idea/
+.vscode/
+*.swp
+
+# Coverage reports
+coverage/
+
+# Compiled source
+*.tsbuildinfo
+*.map
+
+# Optional npm cache directory
+.npm
+
+# macOS Electron signing/packaging
+*.dmg
+*.app
+*.exe
+*.deb
+*.snap
+
+# Electron Forge / Packager
+/.webpack/
+.release/
+.make/
+
+# Misc
+*.tgz
+*.bak
+*.orig
