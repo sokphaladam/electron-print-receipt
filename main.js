@@ -1,186 +1,269 @@
-const { PosPrinter } = require('electron-pos-printer')
-const { app, BrowserWindow } = require('electron/main')
-const path = require('node:path')
-const {WebSocket} = require('ws')
+const { PosPrinter } = require("electron-pos-printer");
+const { app, BrowserWindow } = require("electron/main");
+const path = require("path");
+const { WebSocket } = require("ws");
+const redis = require("redis");
+const { ipcMain } = require("electron");
 
-let mainWindow
+let mainWindow;
 
-async function mapPrinter(){
-  const list = await BrowserWindow.getFocusedWindow().webContents.getPrintersAsync();
-  console.log(list)
+function mapPrinter() {
+  const win = BrowserWindow.getFocusedWindow();
+  win.webContents.once("did-finish-load", async () => {
+    const list = await win.webContents.getPrintersAsync();
+    win.webContents.send(
+      "printers",
+      list
+        .map((x, idx) => `${idx + 1}-${x.displayName}`)
+        .join("\n")
+        .trim()
+    );
+  });
 }
 
-function printJob(data, printerName){
+function printJob(data, printerName) {
   const options = {
     preview: false,
-    margin: '0 0 0 0',
+    margin: "0 0 0 0",
     copies: 1,
     printerName,
     timeOutPerLine: 400,
     silent: true,
-    pageSize: '80mm'
-  }
+    pageSize: "80mm",
+  };
 
   const content = [
     {
-      type: 'text',
+      type: "text",
       value: `តុលេខ=​ ${data.table}`,
-      style: {fontSize: '20px', fontWeight: 'bold', fontFamily: `Hanuman, 'Courier New', Courier, monospace`}
+      style: {
+        fontSize: "20px",
+        fontWeight: "bold",
+        fontFamily: `Hanuman, 'Courier New', Courier, monospace`,
+      },
     },
-  ]
+  ];
 
-  if(data.delivery) {
+  if (data.delivery) {
     content.push({
-      type: 'text',
-      value: '--------------------------------',
-      style: {fontFamily: `Hanuman, 'Courier New', Courier, monospace`}
-    })
+      type: "text",
+      value: "--------------------------------",
+      style: { fontFamily: `Hanuman, 'Courier New', Courier, monospace` },
+    });
     content.push({
-      type: 'text',
+      type: "text",
       value: `ដឹកជញ្ជូន= ${data.delivery}`,
-      style: {fontSize: '18px', fontWeight: 'bold', fontFamily: `Hanuman, 'Courier New', Courier, monospace`}
-    })
+      style: {
+        fontSize: "18px",
+        fontWeight: "bold",
+        fontFamily: `Hanuman, 'Courier New', Courier, monospace`,
+      },
+    });
   }
 
   content.push({
-    type: 'text',
-    value: '--------------------------------',
-    style: {fontFamily: `Hanuman, 'Courier New', Courier, monospace`}
-  })
+    type: "text",
+    value: "--------------------------------",
+    style: { fontFamily: `Hanuman, 'Courier New', Courier, monospace` },
+  });
 
   content.push({
     type: "text",
     value: `កាលបរិច្ឆេទ= ${data.date}`,
-    style: {fontSize: '18px', fontWeight: 'bold', fontFamily: `Hanuman, 'Courier New', Courier, monospace`}
-  })
+    style: {
+      fontSize: "18px",
+      fontWeight: "bold",
+      fontFamily: `Hanuman, 'Courier New', Courier, monospace`,
+    },
+  });
 
   content.push({
-    type: 'text',
-    value: '--------------------------------',
-    style: {fontFamily: `Hanuman, 'Courier New', Courier, monospace`}
-  })
+    type: "text",
+    value: "--------------------------------",
+    style: { fontFamily: `Hanuman, 'Courier New', Courier, monospace` },
+  });
 
   content.push({
-    type: 'text',
+    type: "text",
     value: `ទំនិញ= ${data.title}`,
-    style: {fontSize: '18px', fontWeight: 'bold', fontFamily: `Hanuman, 'Courier New', Courier, monospace`}
-  })
+    style: {
+      fontSize: "18px",
+      fontWeight: "bold",
+      fontFamily: `Hanuman, 'Courier New', Courier, monospace`,
+    },
+  });
 
-  if(data.addon){
+  if (data.addon) {
     content.push({
-      type: 'text',
-      value: '--------------------------------',
-      style: {fontFamily: `Hanuman, 'Courier New', Courier, monospace`}
-    })
+      type: "text",
+      value: "--------------------------------",
+      style: { fontFamily: `Hanuman, 'Courier New', Courier, monospace` },
+    });
     content.push({
-      type: 'text',
+      type: "text",
       value: `Addon= ${data.addon}`,
-      style: {fontSize: '18px', fontWeight: 'bold', fontFamily: `Hanuman, 'Courier New', Courier, monospace`}
-    })
+      style: {
+        fontSize: "18px",
+        fontWeight: "bold",
+        fontFamily: `Hanuman, 'Courier New', Courier, monospace`,
+      },
+    });
   }
 
-  if(data.remark){
+  if (data.remark) {
     content.push({
-      type: 'text',
-      value: '--------------------------------',
-      style: {fontFamily: `Hanuman, 'Courier New', Courier, monospace`}
-    })
+      type: "text",
+      value: "--------------------------------",
+      style: { fontFamily: `Hanuman, 'Courier New', Courier, monospace` },
+    });
     content.push({
-      type: 'text',
+      type: "text",
       value: `Remark= ${data.remark}`,
-      style: {fontSize: '18px', fontWeight: 'bold', fontFamily: `Hanuman, 'Courier New', Courier, monospace`}
-    })
+      style: {
+        fontSize: "18px",
+        fontWeight: "bold",
+        fontFamily: `Hanuman, 'Courier New', Courier, monospace`,
+      },
+    });
   }
 
   content.push({
-    type: 'text',
-    value: '--------------------------------',
-    style: {fontFamily: `Hanuman, 'Courier New', Courier, monospace`}
-  })
-  
+    type: "text",
+    value: "--------------------------------",
+    style: { fontFamily: `Hanuman, 'Courier New', Courier, monospace` },
+  });
+
   content.push({
-    type: 'text',
+    type: "text",
     value: `បញ្ជាទិញដោយ= ${data.by}`,
-    style: {fontSize: '18px', fontWeight: 'bold', fontFamily: `Hanuman, 'Courier New', Courier, monospace`}
-  })
+    style: {
+      fontSize: "18px",
+      fontWeight: "bold",
+      fontFamily: `Hanuman, 'Courier New', Courier, monospace`,
+    },
+  });
 
-  console.log(content, options)
-
-
-  PosPrinter.print(content, options).then(() => console.log('Printer successfully')).catch((err)=>console.log('Failed to print', err))
+  PosPrinter.print(content, options)
+    .then(() => {
+      console.log("Printer successfully");
+      mainWindow.webContents.send(
+        "print-job",
+        JSON.stringify({
+          success: true,
+          message:
+            "Printer successfully -------------------------------------------------",
+        })
+      );
+    })
+    .catch((err) => {
+      console.log("Failed to print", err);
+      JSON.stringify({
+        success: true,
+        message:
+          "Failed to print -------------------------------------------------",
+      });
+    });
 }
 
 // Create the WebSocket server in main process
-const wss = new WebSocket.Server({ port: 8080 });  // WebSocket server on port 8080
+// const wss = new WebSocket.Server({ port: 8080 }); // WebSocket server on port 8080
 
-function isJson(json){
-  try{
+function isJson(json) {
+  try {
     JSON.parse(json);
-    return true
-  }catch{
-    return false
+    return true;
+  } catch {
+    return false;
   }
 }
 
-wss.on('connection', (ws) => {
-  console.log('A client connected');
+/*
+wss.on("connection", (ws) => {
+  console.log("A client connected");
 
   // Send a welcome message to the connected client
-  ws.send('Hello from the WebSocket server!');
+  ws.send("Hello from the WebSocket server!");
 
   // Listen for messages from the client
-  ws.on('message', (message) => {
+  ws.on("message", (message) => {
     console.log(`Received message: ${message}`);
-    if(isJson(message)) {
+    if (isJson(message)) {
       const data = JSON.parse(message);
       printJob(data, data.printerName);
     }
-    ws.send(`Echo: ${message}`);  // Echo the message back to the client
+    ws.send(`Echo: ${message}`); // Echo the message back to the client
   });
 
-  ws.on('close', () => {
-    console.log('A client disconnected');
+  ws.on("close", () => {
+    console.log("A client disconnected");
   });
 });
 
-console.log('WebSocket server is running on ws://localhost:8080');
+console.log("WebSocket server is running on ws://localhost:8080");
+*/
 
-function createWindow () {
+function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
       nodeIntegration: false,
-        contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      contextIsolation: true,
+      preload: path.join(__dirname, "preload.js"),
     },
-  })
+  });
 
   mainWindow.webContents.openDevTools();
 
-  mainWindow.loadFile('index.html')
+  mainWindow.loadFile("index.html");
+}
+
+const client = redis.createClient({
+  username: "default",
+  password: "PIViYStQYFPiyFrK5WXLO4zEVYcOlgDJ",
+  socket: {
+    host: "redis-18190.c295.ap-southeast-1-1.ec2.redns.redis-cloud.com",
+    port: 18190,
+  },
+});
+
+async function redisConnection() {
+  client.on("error", (err) => console.log("Redis Client Error", err));
+
+  await client.connect();
+
+  await client.subscribe("realtime", (message) => {
+    console.log("Received:", message);
+    mainWindow.webContents.send(`realtime`, message);
+    if (isJson(message)) {
+      const data = JSON.parse(message);
+      printJob(data, data.printerName);
+    }
+  });
 }
 
 app.whenReady().then(() => {
-  createWindow()
+  redisConnection().then().catch().finally();
 
-  mapPrinter()
+  createWindow();
 
-  app.on('activate', () => {
+  mapPrinter();
+
+  app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
+      createWindow();
     }
-  })
-})
+  });
+});
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
   }
-})
+});
 
-app.on('will-quit', () => {
-    if(wss) {
-        wss.close()
-    }
-})
+app.on("will-quit", () => {
+  if (client.isOpen) {
+    client.quit();
+  }
+});

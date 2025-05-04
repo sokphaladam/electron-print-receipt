@@ -1,17 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'"> -->
-    <title>Hello World!</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Print Receipt</title>
   </head>
   <body>
-    <h1>Hello World!</h1>
-    We are using Node.js <span id="node-version"></span>,
-    Chromium <span id="chrome-version"></span>,
-    and Electron <span id="electron-version"></span>.
-    <button id="btn_connect">connect</button>
+    <h1>Print Receipt</h1>
+    We are using Node.js <span id="node-version"></span>, Chromium
+    <span id="chrome-version"></span>, and Electron
+    <span id="electron-version"></span>.
+    <!-- <button id="btn_connect">connect</button> -->
+    <button id="btn_print">Printer</button>
+    <div class="p-4">
+      <pre
+        id="pre-code"
+        class="bg-zinc-900 w-full h-auto text-white overflow-hidden overflow-y-auto text-xs font-mono rounded-md italic p-4"
+      >
+    <div id="bottom_pre"></div>
+  </pre>
+    </div>
     <script src="renderen.js"></script>
   </body>
 </html>
