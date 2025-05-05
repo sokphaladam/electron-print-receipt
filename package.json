@@ -22,6 +22,7 @@
     "@electron-forge/plugin-fuses": "^7.8.0",
     "@electron-forge/publisher-github": "^7.8.0",
     "@electron/fuses": "^1.8.0",
+    "@faker-js/faker": "^9.7.0",
     "electron": "^36.1.0"
   },
   "dependencies": {

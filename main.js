@@ -4,6 +4,7 @@ const path = require("path");
 const { WebSocket } = require("ws");
 const redis = require("redis");
 const { ipcMain } = require("electron");
+const { faker } = require("@faker-js/faker");
 
 let mainWindow;
 
@@ -177,38 +178,16 @@ function isJson(json) {
   }
 }
 
-/*
-wss.on("connection", (ws) => {
-  console.log("A client connected");
-
-  // Send a welcome message to the connected client
-  ws.send("Hello from the WebSocket server!");
-
-  // Listen for messages from the client
-  ws.on("message", (message) => {
-    console.log(`Received message: ${message}`);
-    if (isJson(message)) {
-      const data = JSON.parse(message);
-      printJob(data, data.printerName);
-    }
-    ws.send(`Echo: ${message}`); // Echo the message back to the client
-  });
-
-  ws.on("close", () => {
-    console.log("A client disconnected");
-  });
-});
-
-console.log("WebSocket server is running on ws://localhost:8080");
-*/
-
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
-      nodeIntegration: false,
+      nodeIntegration: true,
       contextIsolation: true,
+      imageAnimationPolicy: "animate",
+      allowRunningInsecureContent: true,
+      javascript: true,
       preload: path.join(__dirname, "preload.js"),
     },
   });
@@ -266,4 +245,21 @@ app.on("will-quit", () => {
   if (client.isOpen) {
     client.quit();
   }
+});
+
+ipcMain.on("print-on-receipt", (event, agr) => {
+  console.log(agr);
+  const data = JSON.parse(agr);
+  printJob(
+    {
+      table: faker.number.int(100),
+      delivery: faker.company.name(),
+      date: "2024-05-01 12:20:39",
+      title: faker.commerce.productName(),
+      addon: faker.food.ingredient(),
+      remark: faker.commerce.productMaterial(),
+      by: faker.person.fullName(),
+    },
+    data.printerName
+  );
 });

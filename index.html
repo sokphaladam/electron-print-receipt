@@ -13,7 +13,22 @@
     <span id="chrome-version"></span>, and Electron
     <span id="electron-version"></span>.
     <!-- <button id="btn_connect">connect</button> -->
-    <button id="btn_print">Printer</button>
+    <div class="flex flex-row gap-4 px-4">
+      <button id="btn_print" class="p-1 bg-emerald-600 rounded-md text-white">
+        Printer List
+      </button>
+      <div class="flex-row flex gap-2">
+        <input
+          type="text"
+          id="input_print"
+          placeholder="Printer name"
+          class="border shadow-sm p-1 rounded-md"
+        />
+        <button id="btn_test" class="p-1 bg-emerald-600 rounded-md text-white">
+          Test Print
+        </button>
+      </div>
+    </div>
     <div class="p-4">
       <pre
         id="pre-code"

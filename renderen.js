@@ -56,3 +56,16 @@ btnPrinter.addEventListener("click", () => {
   const s = document.getElementById("bottom_pre");
   s.scrollTop = s.scrollHeight;
 });
+
+let btn_test = document.getElementById("btn_test");
+
+btn_test.addEventListener("click", () => {
+  const input = document.getElementById("input_print");
+  window.electron.ipcRenderer.send(
+    "print-on-receipt",
+    JSON.stringify({
+      printerName: input.value,
+      data: "send",
+    })
+  );
+});
